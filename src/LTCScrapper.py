@@ -1,3 +1,4 @@
+#src/LTCScrapper.py
 import requests
 from bs4 import BeautifulSoup
 
@@ -69,18 +70,6 @@ class LTCScrapper:
             # If nan try 0 before id !
             self.homes.append(self.scrap_one(id))
         return self.homes
-
-    def print_df(self):
-        df = pandas.DataFrame.from_dict(self.homes)
-        print(df)
-
-    def write_csv(self, filename, fieldnames):
-        with open(f'{filename}.csv', mode='w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, restval='')
-            writer.writeheader()
-            for x in self.homes:
-                writer.writerow(x)
-
 
 if __name__ == '__main__':
     scrap = LTCScrapper()
