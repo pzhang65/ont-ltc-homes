@@ -1,3 +1,4 @@
+#src/LTCScrapper.py
 import requests
 from bs4 import BeautifulSoup
 
@@ -11,11 +12,28 @@ class LTCScrapper:
     def get_keys(self):
         return self.keys
 
+    def scrap_phone(self, soup):
+        phone = soup.find(id='ctl00_ContentPlaceHolder1_divHomePhone')
+        return phone.get_text().lstrip('Tel : ') # strip redundant chars
+
+
     def scrap_one(self, id):
         # Get response from id
         resp = requests.get(self.route+str(id))
         # Generate soup object
         soup = BeautifulSoup(resp.content, 'html.parser')
+
+        # Get phone from another div element first for use later
+        phone = self.scrap_phone(soup)
+
+        # check if home id was invalid
+        # invalid id returns the same page just without info
+        if phone == '':
+            #  try 0 before id
+            resp = requests.get(self.route+str(0)+str(id))
+            # re-grab everything
+            soup = BeautifulSoup(resp.content, 'html.parser')
+            phone = self.scrap_phone(soup)
 
         # Find all elements in main home profile element
         profile = soup.find(id='ctl00_ContentPlaceHolder1_divHomeProfile_item_Col1')
@@ -26,16 +44,23 @@ class LTCScrapper:
 
         # Get all texts from each element in col1 = keys, col2= values
         keys = []
-        for x in col1:
-            keys.append(x.get_text())
-            
-        # Set keys attribute as keys for use in generating csv
-        self.keys = keys
+        for i, x in enumerate(col1):
+            # skip 2nd column
+            if i not in (1,5):
+                keys.append(x.get_text())
 
         values = []
-        for x in col2:
-            values.append(x.get_text())
+        for i, x in enumerate(col2):
+            # skip 2nd column
+            if i not in (1,5):
+                values.append(x.get_text())
 
+
+
+        keys.append('Telephone')
+        # Set keys attribute as keys for use in generating csv
+        self.keys = keys
+        values.append(phone)
         # Return a dictionary with key:value pairs
         return dict(zip(keys, values))
 
@@ -45,18 +70,6 @@ class LTCScrapper:
             # If nan try 0 before id !
             self.homes.append(self.scrap_one(id))
         return self.homes
-
-    def print_df(self):
-        df = pandas.DataFrame.from_dict(self.homes)
-        print(df)
-
-    def write_csv(self, filename, fieldnames):
-        with open(f'{filename}.csv', mode='w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, restval='')
-            writer.writeheader()
-            for x in self.homes:
-                writer.writerow(x)
-
 
 if __name__ == '__main__':
     scrap = LTCScrapper()
