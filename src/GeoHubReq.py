@@ -8,14 +8,21 @@ class GeoHubReq:
         self.keys = []
 
     def urban_or_rural(self, home):
-        # 2nd char of Canadian postal code determines rural or urban
-        if int(home['POSTALCODE'][1]) == 0: # 0 is rural
+        """
+        Determines if a home is rural or urban based off postal code
+        If second character of a canadian postal code is 0, then it is rural,
+        any other digit is urban.
+        """
+        if int(home['POSTALCODE'][1]) == 0:
             return 'Rural'
-        else: # all other numbers are urban
+        else:
             return 'Urban'
 
 
     def get_homes(self):
+        """
+        Makes a request to GeoHub and returns a list of homes
+        """
         data = []
         resp = requests.get(self.route).json()
         data += resp["features"]#["attributes"]
@@ -28,16 +35,18 @@ class GeoHubReq:
         return self.homes
 
     def get_keys(self):
+        """
+        Returns dictionary keys of one home as keys for fields
+        """
         return list(self.homes[0].keys())
 
     def change_route(self, route):
         self.route = route
 
-    def print_df(self):
-        df = pandas.DataFrame.from_dict(self.homes)
-        print(df)
-
     def get_moh_id(self):
+        """
+        Returns just MOH_PRO_ID for use in scrapper
+        """
         lst = []
         for x in self.homes:
             lst.append(x['MOH_PRO_ID'])
