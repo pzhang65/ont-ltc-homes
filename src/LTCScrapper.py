@@ -13,11 +13,18 @@ class LTCScrapper:
         return self.keys
 
     def scrap_phone(self, soup):
+        """
+        Returns only phone number
+        """
         phone = soup.find(id='ctl00_ContentPlaceHolder1_divHomePhone')
         return phone.get_text().lstrip('Tel : ') # strip redundant chars
 
 
     def scrap_one(self, id):
+        """
+        Gets all required key value pairs from a page and returns a dictionary of data
+        Also checks for some ID discrepencies
+        """
         # Get response from id
         resp = requests.get(self.route+str(id))
         # Generate soup object
@@ -55,16 +62,18 @@ class LTCScrapper:
             if i not in (1,5):
                 values.append(x.get_text())
 
-
-
         keys.append('Telephone')
         # Set keys attribute as keys for use in generating csv
+
         self.keys = keys
         values.append(phone)
         # Return a dictionary with key:value pairs
         return dict(zip(keys, values))
 
     def scrap_list(self, list):
+        """
+        Scraps all homes from a list of home IDs
+        """
         for id in list:
             print(f'Scrapping home: {id}')
             # If nan try 0 before id !
